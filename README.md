@@ -1,4 +1,4 @@
-# Ex-06: Classifying Spam Emails
+# Ex-08: Analyzing Egg Production Trends
 
 ## Objective:
 
