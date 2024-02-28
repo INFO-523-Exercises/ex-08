@@ -2,137 +2,78 @@
 
 ## Objective:
 
-Apply and evaluate different classification models to predict high-risk credit individuals using financial traits, focusing on understanding model performance through various evaluation metrics.
+Analyze the impact of different housing conditions on egg production using regression models, focusing on understanding the relationship between cage-free percentages and overall production.
 
-**Prerequisites:** Ensure you have Python, Jupyter Notebook, and the required libraries (**`pandas`**, **`numpy`**, **`scikit-learn`**, **`matplotlib`**, **`seaborn`**, **`mord`**) installed. The dataset **`spam.csv`** should be available in the **`data`** directory.
+**Prerequisites:** Ensure Python, Jupyter Notebook, and necessary libraries (**`pandas`**, **`numpy`**, **`scikit-learn`**, **`matplotlib`**, **`seaborn`**) are installed. The datasets **`egg-production.csv`** and **`cage-free-percentages.csv`** should be accessible in the **`data`** directory.
 
 ## Dataset:
 
-The data this week comes from Vincent Arel-Bundock's Rdatasets package(<https://vincentarelbundock.github.io/Rdatasets/index.html>).
+The data this week comes from [The Humane League's US Egg Production dataset](https://thehumaneleague.org/article/E008R01-us-egg-production-data) by [Samara Mendez](https://samaramendez.github.io/). Dataset and code is available for this project on OSF at [US Egg Production Data Set](https://osf.io/z2gxn/).
 
-> Rdatasets is a collection of 2246 datasets which were originally distributed alongside the statistical software environment R and some of its add-on packages. The goal is to make these data more broadly accessible for teaching and statistical software development.
+This dataset tracks the supply of cage-free eggs in the United States from December 2007 to February 2021. For TidyTuesday we've used data through February 2021, but the full dataset, with data through the present, is available in the [OSF project](https://osf.io/z2gxn/).
 
-We're working with the [spam email](https://vincentarelbundock.github.io/Rdatasets/doc/DAAG/spam7.html) dataset. This is a subset of the [spam e-mail database](https://search.r-project.org/CRAN/refmans/kernlab/html/spam.html).
+> In this project, they synthesize an analysis-ready data set that tracks cage-free hens and the supply of cage-free eggs relative to the overall numbers of hens and table eggs in the United States. The data set is based on reports produced by the United States Department of Agriculture (USDA), which are published weekly or monthly. They supplement these data with definitions and a taxonomy of egg products drawn from USDA and industry publications. The data include flock size (both absolute and relative) and egg production of cage-free hens as well as all table-egg-laying hens in the US, collected to understand the impact of the industry's cage-free transition on hens. Data coverage ranges from December 2007 to February 2021.
 
-This is a dataset collected at Hewlett-Packard Labs by Mark Hopkins, Erik Reeber, George Forman, and Jaap Suermondt and shared with the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/94/spambase). The dataset classifies 4601 e-mails as spam or non-spam, with additional variables indicating the frequency of certain words and characters in the e-mail.
+We'll use two datasets: **`egg-production.csv`** and **`cage-free-percentages.csv`**, which include monthly observations of egg production types, housing conditions, and the percentages of cage-free eggs. These datasets provide a unique opportunity to explore the effects of production practices on egg production volumes.
 
-### Metadata
+### Metadata for **`egg-production.csv`:**
 
-| Variable  | Class     | Description                                                              |
-|-----------|-----------|--------------------------------------------------------------------------|
-| `crl.tot` | double    | Total length of uninterrupted sequences of capitals                      |
-| `dollar`  | double    | Occurrences of the dollar sign, as percent of total number of characters |
-| `bang`    | double    | Occurrences of `!`, as percent of total number of characters             |
-| `money`   | double    | Occurrences of `money`, as percent of total number of characters         |
-| `n000`    | double    | Occurrences of the string `000`, as percent of total number of words     |
-| `make`    | double    | Occurrences of `make`, as a percent of total number of words             |
-| `yesno`   | character | Outcome variable, a factor with levels `n` not spam, `y` spam            |
+| Variable             | Class     | Description                                                          |
+|-----------------|-----------------|---------------------------------------|
+| **`observed_month`** | double    | Month in which observations were collected                           |
+| **`prod_type`**      | character | Type of egg product: hatching, table eggs                            |
+| **`prod_process`**   | character | Production process and housing: cage-free (organic/non-organic), all |
+| **`n_hens`**         | double    | Number of hens                                                       |
+| **`n_eggs`**         | double    | Number of eggs produced                                              |
+| **`source`**         | character | Original USDA report source                                          |
+
+### **Metadata for `cage-free-percentages.csv`:**
+
+| **Variable**         | **Class** | **Description**                                                    |
+|----------------|----------------|----------------------------------------|
+| **`observed_month`** | double    | Month in which observations were collected                         |
+| **`percent_hens`**   | double    | Percentage of cage-free hens relative to all table-egg-laying hens |
+| **`percent_eggs`**   | double    | Percentage of cage-free eggs relative to all table eggs            |
+| **`source`**         | character | Original USDA report source                                        |
 
 (Source: [TidyTuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-08-15/readme.md))
 
-## Question:
+## **Question:**
 
-Can we predict whether an email is Spam or not using decision tree classification?
+How do cage-free production practices influence overall egg production?
 
 ## **Step 1: Setup and Data Preprocessing**
 
--   Start by importing the necessary libraries and load the **`spam.csv`** dataset.
+1.  Begin by importing necessary libraries and loading the datasets.
 
--   Preprocess the data by encoding categorical variables, defining features and target, and splitting the data into training and testing sets. Finally, apply PCA to reduce dimensionality.
+2.  Merge the datasets on the **`observed_month`** variable and preprocess the data by encoding categorical variables and handling missing values if any.
 
-    ```{python}
-    # Import libraries
-    import pandas as pd
-    import numpy as np
-    from sklearn.preprocessing import LabelEncoder
-    from sklearn.decomposition import PCA
-    from sklearn.model_selection import train_test_split
+## **Step 2: Exploratory Data Analysis (EDA)**
 
-    # Load the dataset
-    spam = pd.read_csv("data/spam.csv")
+1.  Conduct EDA to understand the distribution of cage-free percentages and their relationship with egg production volumes.
 
-    # Encode categorical variables
-    categorical_columns = spam.select_dtypes(include = ['object', 'category']).columns.tolist()
-    label_encoders = {col: LabelEncoder() for col in categorical_columns}
-    for col in categorical_columns:
-        spam[col] = label_encoders[col].fit_transform(spam[col])
+2.  Utilize visualizations like scatter plots and histograms to illustrate these relationships.
 
-    # Define features and target
-    X = spam.drop('yesno', axis = 1)
-    y = spam['yesno']
+## **Step 3: Model Training**
 
-    # Split the data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+1.  Train regression models to predict **`n_eggs`** using **`percent_hens`** and other relevant variables as predictors.
 
-    # Reduce dimensionality
-    pca = PCA(n_components = 2)
-    X_train_pca = pca.fit_transform(X_train)
-    X_test_pca = pca.transform(X_test)
-    ```
+2.  Consider linear regression, ridge regression, and lasso regression for this task. Evaluate the models based on training data.
 
-## **Step 2: Model Training and Decision Boundary Visualization**
+## **Step 4: Model Evaluation and Interpretation**
 
--   Train a Decision Tree classifier on the PCA-transformed training data.
+1.  Use metrics such as R-squared, Mean Squared Error (MSE), and coefficients analysis to evaluate the performance of your models.
 
--   Implement and use the **`decisionplot`** function to visualize the decision boundary of your trained model.
-
-```{python}
-#| eval: false
-from sklearn.tree import DecisionTreeClassifier
-import matplotlib.pyplot as plt
-
-# Train Decision Tree
-dtree = DecisionTreeClassifier()
-dtree.fit(X_train_pca, y_train)
-
-# Implement the decisionplot function (as provided in the lecture content)
-# Add the decisionplot function here
-
-# Visualize decision boundary
-decisionplot(dtree, pd.DataFrame(X_train_pca, columns = ['PC1', 'PC2']), y_train)
-
-```
-
-## **Step 3: Model Evaluation**
-
--   Evaluate your model using accuracy, precision, recall, F1 score, and AUC-ROC metrics.
-
-```{python}
-#| eval: false
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, roc_curve, auc
-from sklearn.preprocessing import label_binarize
-
-# Predictions
-predictions = dtree.predict(X_test_pca)
-
-# Evaluate metrics
-accuracy = accuracy_score(y_test, predictions)
-precision = precision_score(y_test, predictions, average = 'weighted')
-recall = recall_score(y_test, predictions, average = 'weighted')
-f1 = f1_score(y_test, predictions, average = 'weighted')
-
-# Display results
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"F1 Score: {f1:.2f}")
-
-# For AUC-ROC, binarize the output and calculate AUC-ROC for each class
-# Add the necessary code for AUC-ROC calculation here (refer to lecture content)
-```
+2.  Discuss the significance of cage-free percentages in predicting egg production volumes.
 
 ## **Assignment:**
 
--   Implement the missing parts of the code: the **`decisionplot`** function and AUC-ROC calculation.
+1.  Implement the data preprocessing, model training, and evaluation steps.
 
--   Discuss the results among your peers. Consider the following:
+2.  Explore the relationship between cage-free percentages and egg production, utilizing the models trained.
 
-    -   Which metric is most informative for this problem and why?
-
-    -   How does the decision boundary visualization help in understanding the model's performance?
-
-    -   Reflect on the impact of PCA on model performance and decision boundary.
+3.  Reflect on the implications of your findings for the poultry industry, particularly concerning cage-free housing practices.
 
 ## **Submission:**
 
--   Submit your Jupyter Notebook via GitHub with implemented code and a brief summary of your discussion findings regarding model evaluation and the impact of PCA.
+-   Submit your Jupyter Notebook via the course's learning management system, including your code, visualizations, and a brief discussion of your findings regarding the impact of cage-free practices on egg production.
